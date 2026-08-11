@@ -1,4 +1,25 @@
-<!DOCTYPE html>
+x; color:var(--gold);
+    margin-top:26px; letter-spacing:.5px; animation:pulseText 1.8s ease-in-out infinite;
+  }
+  @keyframes pulseText{0%,100%{opacity:.6;}50%{opacity:1;}}
+  .gift-wrap{position:relative; width:200px; height:200px; cursor:pointer;}
+  .gift-box{position:absolute; bottom:0; width:200px; height:120px; background:linear-gradient(135deg,#ff8fab,#e6577f); border-radius:8px; box-shadow:0 20px 50px rgba(0,0,0,.45);}
+  .gift-lid{position:absolute; bottom:118px; width:210px; left:-5px; height:34px; background:linear-gradient(135deg,#ffa9c1,#ff7096); border-radius:8px; box-shadow:0 8px 18px rgba(0,0,0,.35); transition:transform .7s cubic-bezier(.34,1.56,.64,1), opacity .5s ease;}
+  .ribbon-v{position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:26px; height:120px; background:var(--gold);}
+  .ribbon-h{position:absolute; bottom:118px; left:-5px; width:210px; height:34px; background:var(--gold); transition:transform .7s cubic-bezier(.34,1.56,.64,1), opacity .5s ease;}
+  .bow{position:absolute; bottom:130px; left:50%; transform:translateX(-50%); width:90px; height:56px; z-index:3; transition:transform .7s cubic-bezier(.34,1.56,.64,1), opacity .5s ease;}
+  .bow svg{width:100%; height:100%; overflow:visible; filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+  .gift-wrap.opened .gift-lid{transform:translate(-40px,-160px) rotate(-45deg); opacity:0;}
+  .gift-wrap.opened .ribbon-h{transform:translate(-40px,-160px) rotate(-45deg); opacity:0;}
+  .gift-wrap.opened .bow{transform:translate(-50%,-190px) rotate(-60deg) scale(.7); opacity:0;}
+  .gift-wrap.opened .gift-box{animation:boxShake .5s ease 1, boxShrink .6s ease .5s forwards;}
+  @keyframes boxShake{0%,100%{transform:rotate(0);}25%{transform:rotate(-3deg);}75%{transform:rotate(3deg);}}
+  @keyframes boxShrink{to{transform:scale(.3) translateY(40px); opacity:0;}}
+  .glow-burst{position:absolute; left:50%; top:60%; width:10px; height:10px; border-radius:50%;
+    background:radial-gradient(circle, #fff8e0 0%, var(--gold) 40%, transparent 70%);
+    transform:translate(-50%,-50%) scale(0); opacity:0; pointer-events:none;}
+  .gift-wrap.opened .glow-burst{animation:burst .9s ease .45s forwards;}
+  @keyframes burst{0%{transform:translate(-50%,-50%) scale(0); opac<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -159,6 +180,7 @@
   @keyframes confettiFall{to{transform:translateY(110vh) rotate(600deg); opacity:.9;}}
 
   footer.credit{position:absolute; bottom:6px; font-size:10px; color:rgba(255,255,255,.25); letter-spacing:1px; z-index:2;}
+  #err-box{position:fixed; left:10px; right:10px; bottom:10px; z-index:999; background:#3a0d18; color:#ffd7d7; font-family:monospace; font-size:11px; padding:10px 12px; border-radius:8px; border:1px solid #ff6b6b; display:none; white-space:pre-wrap; max-height:40vh; overflow:auto;}
 </style>
 </head>
 <body>
@@ -225,7 +247,15 @@
 </div>
 
 <footer class="credit">made with 💜 for Ma</footer>
+<div id="err-box"></div>
 
+<script>
+window.addEventListener('error', function(e){
+  var box = document.getElementById('err-box');
+  box.style.display = 'block';
+  box.textContent = 'Something broke — please screenshot this and send it back:\n' + e.message + '\n(line ' + e.lineno + ')';
+});
+</script>
 <script>
 /* ================= AMBIENT PARTICLES ================= */
 const bgLayer = document.getElementById('bg-particles');
@@ -253,12 +283,17 @@ function showScreen(id){
 
 /* ================= SCREEN 1: GIFT OPEN ================= */
 const giftWrap = document.getElementById('giftWrap');
-giftWrap.addEventListener('click', ()=>{
-  if(giftWrap.classList.contains('opened')) return;
+const giftScreen = document.getElementById('screen-gift');
+let giftOpenedFlag = false;
+function openGift(){
+  if(giftOpenedFlag) return;
+  giftOpenedFlag = true;
   giftWrap.classList.add('opened');
   burstConfetti(30);
   setTimeout(()=>{ showScreen('screen-message'); triggerPopups(); }, 1050);
-});
+}
+giftScreen.addEventListener('click', openGift);
+giftScreen.addEventListener('touchend', function(e){ e.preventDefault(); openGift(); }, {passive:false});
 
 /* ================= SCREEN 2: MESSAGE POPUPS ================= */
 function triggerPopups(){
@@ -277,10 +312,16 @@ function triggerPopups(){
     }, i*130);
   }
 }
-document.getElementById('ringBtn').addEventListener('click', ()=>{
+const ringBtn = document.getElementById('ringBtn');
+let ringTappedFlag = false;
+function openRing(){
+  if(ringTappedFlag) return;
+  ringTappedFlag = true;
   burstConfetti(18);
-  setTimeout(()=>{ showScreen('screen-story'); renderCard(0); }, 350);
-});
+  setTimeout(()=>{ showScreen('screen-story'); renderCard(0); ringTappedFlag = false; }, 350);
+}
+ringBtn.addEventListener('click', openRing);
+ringBtn.addEventListener('touchend', function(e){ e.preventDefault(); openRing(); }, {passive:false});
 
 /* ================= CONFETTI ================= */
 function burstConfetti(count){
@@ -309,6 +350,36 @@ function chibi({x,y,scale=1,flip=false,hair,dress,skin='#ffe0bd',mood='happy',ar
     <line x1="9" y1="58" x2="11" y2="80" stroke="#4a3728" stroke-width="7" stroke-linecap="round"/>
     <ellipse cx="-11" cy="83" rx="8" ry="5" fill="#3a2a1e"/>
     <ellipse cx="11" cy="83" rx="8" ry="5" fill="#3a2a1e"/>
+    <path d="M -22 25 Q 0 15 22 25 L 28 58 Q 0 68 -28 58 Z" fill="${dress}"/>
+    <g transform="rotate(${armL} -20 30)">
+      <line x1="-20" y1="30" x2="-20" y2="55" stroke="${dress}" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="-20" cy="57" r="6" fill="${skin}"/>
+    </g>
+    <g transform="rotate(${armR} 20 30)">
+      <line x1="20" y1="30" x2="20" y2="55" stroke="${dress}" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="20" cy="57" r="6" fill="${skin}"/>
+    </g>
+    <rect x="-6" y="10" width="12" height="10" fill="${skin}"/>
+    <circle cx="0" cy="-5" r="24" fill="${skin}"/>
+    ${blush ? `<circle cx="-15" cy="0" r="4" fill="#ff9db3" opacity=".6"/><circle cx="15" cy="0" r="4" fill="#ff9db3" opacity=".6"/>` : ''}
+    ${moodFace(mood)}
+    <path d="M -24 -5 Q -26 -34 0 -36 Q 26 -34 24 -5 Q 24 8 17 2 Q 18 -18 0 -19 Q -18 -18 -17 2 Q -24 8 -24 -5 Z" fill="${hair}"/>
+  </g>`;
+}
+function moodFace(mood){
+  switch(mood){
+    case 'happy':
+      return `<circle cx="-8" cy="-8" r="2.6" fill="#3a2a1e"/><circle cx="8" cy="-8" r="2.6" fill="#3a2a1e"/><path d="M -8 3 Q 0 10 8 3" stroke="#c0527a" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    case 'shy':
+      return `<path d="M -11 -8 Q -8 -5 -5 -8" stroke="#3a2a1e" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M 5 -8 Q 8 -5 11 -8" stroke="#3a2a1e" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="-15" cy="1" r="4" fill="#ff9db3" opacity=".7"/><circle cx="15" cy="1" r="4" fill="#ff9db3" opacity=".7"/><path d="M -5 3 Q 0 6 5 3" stroke="#c0527a" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+    case 'sad':
+      return `<path d="M -11 -11 L -5 -9" stroke="#3a2a1e" stroke-width="2" stroke-linecap="round"/><path d="M 11 -11 L 5 -9" stroke="#3a2a1e" stroke-width="2" stroke-linecap="round"/><circle cx="-8" cy="-6" r="2.4" fill="#3a2a1e"/><circle cx="8" cy="-6" r="2.4" fill="#3a2a1e"/><path d="M -8 8 Q 0 3 8 8" stroke="#c0527a" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    case 'cry':
+      return `<circle cx="-8" cy="-7" r="2.4" fill="#3a2a1e"/><circle cx="8" cy="-7" r="2.4" fill="#3a2a1e"/><path d="M -9 -3 Q -12 6 -8 12 Q -5 8 -9 -3 Z" fill="#7fc8f8"/><path d="M 9 -3 Q 12 6 8 12 Q 5 8 9 -3 Z" fill="#7fc8f8"/><path d="M -7 9 Q 0 5 7 9" stroke="#c0527a" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+    case 'love':
+      return `<path d="M -11 -7 C -13 -11, -19 -9, -16 -5 C -14 -2, -11 -1, -11 -1 C -11 -1, -8 -2, -6 -5 C -3 -9, -9 -11, -11 -7 Z" fill="#ff5c8a"/><path d="M 11 -7 C 9 -11, 3 -9, 6 -5 C 8 -2, 11 -1, 11 -1 C 11 -1, 14 -2, 16 -5 C 19 -9, 13 -11, 11 -7 Z" fill="#ff5c8a"/><path d="M -8 4 Q 0 10 8 4" stroke="#c0527a" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    case 'proud':
+      return `<path d="M -12 -8 Q -8 -13 -4 -8" stroke="#3a2a1e" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M 4 -8 Q 8 -13 12 -8" stroke="#3a2a1e" stroke-width="2.4" fill="none" stroke-linecap="round"/><paty="5" fill="#3a2a1e"/>
     <path d="M -22 25 Q 0 15 22 25 L 28 58 Q 0 68 -28 58 Z" fill="${dress}"/>
     <g transform="rotate(${armL} -20 30)">
       <line x1="-20" y1="30" x2="-20" y2="55" stroke="${dress}" stroke-width="8" stroke-linecap="round"/>
